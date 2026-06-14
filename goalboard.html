@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer</title>
+<link rel="stylesheet" href="mth.css">
+<link rel="icon" type="image/x-icon" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    
+<nav >
+<a href="index.html"> About</a>
+<img src="logo.png" alt="logo" id="logo">
+<button id="toos" popovertarget="tools-menu"> Tools </button>
+ 
+</nav>    
+<div id="tools-menu" popover>
+    <menu id="menmen">
+     <li style="list-style-image: url(checklist\ 1.png);"> <a href="checklist.html" class="tt">Checklist</a> </li>
+     <li style="list-style-image: url(timer\ 1.png);"> <a href="timer.html" class="tt">Timer</a> </li> 
+     <li style="list-style-image: url(target\ 1.png);"> <a href="goalboard.html" class="tt">GoalsBoard</a> </li>   
+    </menu> 
+</div>
+<select id="themeSelect">
+  <option value="" selected>🎨</option>
+  <option value="black">Black</option>
+  <option value="pink">Pink</option>
+  <option value="blue">Blue</option>
+  <option value="green">Green</option>
+  <option value="yellow">Yellow</option>
+  <option value="red">Red</option>
+  <option value="orange">Orange</option>
+  <option value="brown">Brown/Beige</option>
+  <option value="purple">Purple</option>
+</select> 
+
+<div id="page">
+    <label class="title"> GoalsBoard </label>
+    <div id="board"> <img src="white.png" style="width: 100%; height: 100%;"></div>
+
+    <button id="new_note" class="buttons" title="Click here, then click anywhere on the board to drop a note!">Add a new Goal</button>
+
+    <div id="Notepopup" class="popups">
+      <div class="popups-content">
+        <textarea id="message" placeholder="Write your Goal..."></textarea>
+        <div class="colorss">
+          <label><input type="radio" name="color" value="white" checked> White </label>
+          <label><input type="radio" name="color" value="pink"> Pink </label>
+          <label><input type="radio" name="color" value="blue"> Blue </label>
+          <label><input type="radio" name="color" value="yellow">Yellow </label>          
+          <label><input type="radio" name="color" value="red"> Red </label>
+          <label><input type="radio" name="color" value="purple"> Purple </label>
+          <label><input type="radio" name="color" value="beige"> Biege </label>
+          <label><input type="radio" name="color" value="green"> Green </label>
+        </div>
+        <div id="buttons">
+        <button id="confirmAddNote" class="buttons">Confirm</button>
+        <button onclick="closePopup()" class="buttons">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+
+</div>
+
+</body>
+
+
+
+
+<script>
+
+  const popup = document.getElementById('Notepopup');
+  const newNoteBtn = document.getElementById('new_note');
+  const board = document.getElementById('board');
+  const messageInput = document.getElementById('message');
+  const confirmAddNoteBtn = document.getElementById('confirmAddNote');
+
+  let selectedPosition = null;
+  let notes = [];
+
+
+  function loadNotes() {
+    board.innerHTML = ''; 
+    const savedNotes = localStorage.getItem("goalNotes");
+    
+
+    notes = savedNotes ? JSON.parse(savedNotes) : [];
+    
+    notes.forEach(noteData => {
+      createNoteElement(noteData);
+    });
+  }
+
+  
+  function saveNotesToLocalStorage() {
+    localStorage.setItem("goalNotes", JSON.stringify(notes));
+  }
+
+  
+  function deleteNote(id) {
+    notes = notes.filter(note => note.id !== id);
+    saveNotesToLocalStorage();
+    
+    const noteElem = board.querySelector(`[data-id="${id}"]`);
+    if (noteElem) noteElem.remove();
+  }
+
+  
+  function createNoteElement({ id, message, color, left, top }) {
+    const note = document.createElement('div');
+    note.classList.add('sticky-note', color);
+    note.style.left = left + 'px';
+    note.style.top = top + 'px';
+    note.setAttribute('data-id', id);
+    note.style.position = 'absolute';
+    note.style.cursor = 'move';
+
+    const textNode = document.createElement('div');
+    textNode.textContent = message;
+    note.appendChild(textNode);
+
+    
+    const delBtn = document.createElement('span');
+    delBtn.classList.add('delete-note');
+    delBtn.innerHTML = '&times;';
+    delBtn.title = "Delete this note";
+    delBtn.style.position = 'absolute';
+    delBtn.style.top = '2px';
+    delBtn.style.right = '5px';
+    delBtn.style.cursor = 'pointer';
+    delBtn.style.userSelect = 'none';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteNote(id);
+    });
+    note.appendChild(delBtn);
+
+    makeDraggable(note);
+    board.appendChild(note);
+  }
+
+
+  newNoteBtn.addEventListener('click', () => {
+    board.style.cursor = 'crosshair';
+
+    function onClick(e) {
+      const rect = board.getBoundingClientRect();
+      let left = e.clientX - rect.left;
+      let top = e.clientY - rect.top;
+
+      left = Math.min(left, board.clientWidth - 160);
+      top = Math.min(top, board.clientHeight - 110);
+
+      selectedPosition = { left, top };
+
+      board.style.cursor = 'default';
+      board.removeEventListener('click', onClick);
+
+      messageInput.value = '';
+      confirmAddNoteBtn.disabled = false;
+      popup.style.display = 'flex';
+      messageInput.focus();
+    }
+
+    board.addEventListener('click', onClick);
+  });
+
+  confirmAddNoteBtn.addEventListener('click', () => {
+    const message = messageInput.value.trim();
+    if (!message) return alert('Please enter a message.');
+    if (!selectedPosition) return alert('Please click on the board.');
+
+    const colorRadios = document.getElementsByName('color');
+    let selectedColor = 'white';
+    for (const radio of colorRadios) {
+      if (radio.checked) {
+        selectedColor = radio.value;
+        break;
+      }
+    }
+
+    const id = Date.now().toString();
+    const noteData = {
+      id,
+      message,
+      color: selectedColor,
+      left: selectedPosition.left,
+      top: selectedPosition.top
+    };
+
+    notes.push(noteData);
+    saveNotesToLocalStorage();
+    createNoteElement(noteData);
+    popup.style.display = 'none';
+  });
+
+  function closePopup() {
+    popup.style.display = 'none';
+    board.style.cursor = 'default';
+  }
+
+  
+  function makeDraggable(el) {
+    el.style.position = 'absolute';
+    let offsetX, offsetY;
+
+    el.addEventListener('mousedown', (e) => {
+      offsetX = e.clientX - el.offsetLeft;
+      offsetY = e.clientY - el.offsetTop;
+
+      function moveHandler(e) {
+        el.style.left = (e.clientX - offsetX) + 'px';
+        el.style.top = (e.clientY - offsetY) + 'px';
+      }
+
+      function upHandler() {
+        document.removeEventListener('mousemove', moveHandler);
+        document.removeEventListener('mouseup', upHandler);
+
+        const id = el.getAttribute('data-id');
+        const note = notes.find(n => n.id === id);
+        if (note) {
+          note.left = parseInt(el.style.left);
+          note.top = parseInt(el.style.top);
+          saveNotesToLocalStorage(); 
+        }
+      }
+
+      document.addEventListener('mousemove', moveHandler);
+      document.addEventListener('mouseup', upHandler);
+    });
+  }
+
+  
+  loadNotes();
+
+    
+const themes = {
+  black: { bg: "white", border: "black", check:'white' },  
+  pink: { bg: "#FFF1F1", border: "#dda6a9", check: 'pink' },
+  blue: { bg: "#CBDCEB", border: "#809eb9", check: 'blue' },
+  green: { bg: "#F1F3E0", border: "#A1BC98", check:'green' },
+  yellow: { bg: "#FFF8DE", border: "#edca07dd", check:'yellow' },
+  red: { bg: "#ff908a", border: "#BF1A1A", check:'red' },
+  orange: { bg: "#F9B487", border: "#EF7722", check:'orange' },
+  brown: { bg: "#E6D8C3", border: "#7B542F", check:'beige' },
+  purple:{ bg: "#e9e2ff", border: "#8D5F8C", check:'purple' }
+};
+
+const select = document.getElementById("themeSelect");
+
+select.addEventListener("change", (e) => {
+  const theme = themes[e.target.value];
+  if (!theme) return;  
+  for (let key in theme) {
+    document.documentElement.style.setProperty(`--${key}`, theme[key]);
+  }
+
+  localStorage.setItem("selectedTheme", e.target.value);
+
+  select.value = "";
+
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("selectedTheme");
+  if (saved && themes[saved]) {
+    const theme = themes[saved];
+    for (let key in theme) {
+      document.documentElement.style.setProperty(`--${key}`, theme[key]);
+    }
+    select.value = saved; 
+  }
+
+  select.value = "";
+});
+
+</script>

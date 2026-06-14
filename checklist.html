@@ -1,0 +1,168 @@
+<!DOCTYPE HTML >
+<head>
+<title> CheckList </title>
+<link rel="stylesheet" href="mth.css">
+<link rel="icon" type="image/x-icon" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width= device-width, initial-scale=1.0">
+</head>
+<body>
+
+ <nav >
+<a href="index.html"> About</a>
+<img src="logo.png" alt="logo" id="logo">
+<button id="toos" popovertarget="tools-menu"> Tools </button>
+ 
+</nav>    
+<div id="tools-menu" popover>
+    <menu id="menmen">
+     <li style="list-style-image: url(checklist\ 1.png);"> <a href="checklist.html" class="tt">Checklist</a> </li>
+     <li style="list-style-image: url(timer\ 1.png);"> <a href="timer.html" class="tt">Timer</a> </li>  
+          <li style="list-style-image: url(target\ 1.png);"> <a href="goalboard.html" class="tt">GoalsBoard</a> </li>   
+
+    </menu> 
+</div> 
+    
+<select id="themeSelect">
+  <option value="" selected>🎨</option>
+  <option value="black">Black</option>
+  <option value="pink">Pink</option>
+  <option value="blue">Blue</option>
+  <option value="green">Green</option>
+  <option value="yellow">Yellow</option>
+  <option value="red">Red</option>
+  <option value="orange">Orange</option>
+  <option value="brown">Brown/Beige</option>
+  <option value="purple">Purple</option>
+</select>  
+<div id="paper">
+
+<label class="title"> CHECKLIST </label> 
+<div id="task-container">
+<ul id=tasks>
+
+</ul> 
+</div>
+<input type="text" id="taskInput" placeholder="Enter your task here ✔️">
+
+
+</div>        
+
+<button id="add" class="buttons" onclick="Getinput()"> Add Task! </button>
+
+</body>  
+
+<script>
+function saveTasks() {
+    const tasks = [];
+    document.querySelectorAll('.list').forEach(li => {
+        const text = li.querySelector('.task-text').textContent;
+        const checked = li.querySelector('.task-check').checked;
+        tasks.push({ text, checked });
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function addTask(text, checked = false) {
+    const ul = document.getElementById('tasks');
+    const li = document.createElement('li');
+    li.className = 'list';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-check';
+    checkbox.checked = checked;
+
+    const span = document.createElement('span');
+    span.className = 'task-text';
+    span.textContent = text;
+
+    const trash = document.createElement('button');
+    trash.className = 'trash-icon';
+    trash.textContent = '🗑️';
+
+    li.appendChild(checkbox);
+    li.appendChild(span);
+    li.appendChild(trash);
+    ul.appendChild(li);
+
+   checkbox.addEventListener('change', function() {
+    if (checkbox.checked) {
+        span.style.textDecoration = 'line-through';
+        span.style.color = '#888'; 
+    } else {
+        span.style.textDecoration = 'none';
+        span.style.color = '#646464'; 
+    }
+    saveTasks(); 
+});
+
+    trash.addEventListener('click', function() {
+        li.remove();
+        saveTasks();
+    });
+}
+
+function loadTasks() {
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    tasks.forEach(task => addTask(task.text, task.checked));
+}
+
+function Getinput() {
+    const input = document.getElementById('taskInput'); 
+    const text = input.value.trim();                    
+    if (!text) return;
+
+    addTask(text);
+    input.value = '';  
+    input.focus();      
+    saveTasks();       
+}
+
+const themes = {
+  black: { bg: "white", border: "black", check:'white' },  
+  pink: { bg: "#FFF1F1", border: "#dda6a9", check: 'pink' },
+  blue: { bg: "#CBDCEB", border: "#809eb9", check: 'blue' },
+  green: { bg: "#F1F3E0", border: "#A1BC98", check:'green' },
+  yellow: { bg: "#FFF8DE", border: "#edca07dd", check:'yellow' },
+  red: { bg: "#ff908a", border: "#BF1A1A", check:'red' },
+  orange: { bg: "#F9B487", border: "#EF7722", check:'orange' },
+  brown: { bg: "#E6D8C3", border: "#7B542F", check:'beige' },
+  purple:{ bg: "#e9e2ff", border: "#8D5F8C", check:'purple' }
+};
+
+const select = document.getElementById("themeSelect");
+
+select.addEventListener("change", (e) => {
+  const theme = themes[e.target.value];
+  if (!theme) return;  
+  for (let key in theme) {
+    document.documentElement.style.setProperty(`--${key}`, theme[key]);
+  }
+
+  localStorage.setItem("selectedTheme", e.target.value);
+
+  select.value = "";
+
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("selectedTheme");
+  if (saved && themes[saved]) {
+    const theme = themes[saved];
+    for (let key in theme) {
+      document.documentElement.style.setProperty(`--${key}`, theme[key]);
+    }
+    select.value = saved; 
+  }
+
+  select.value = "";
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTasks();
+});
+</script>
+   
