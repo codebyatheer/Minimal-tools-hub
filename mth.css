@@ -132,6 +132,17 @@ h1 {
 }
 
 
+button, 
+a, 
+a:visited, 
+.main-nav, 
+#tooos {
+    color: inherit; /* Forces the browser to use YOUR text color */
+    -webkit-appearance: none; /* Strips out default iOS button skinning */
+    appearance: none;
+}
+
+
 
 /*about*/
 
